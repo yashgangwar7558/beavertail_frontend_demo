@@ -89,7 +89,7 @@ export const AuthProvider = ({ children }) => {
     const logout = () => {
         setIsLoading(true);
         client.post(
-            '/sign-in',
+            '/sign-out',
             {},
 
             {

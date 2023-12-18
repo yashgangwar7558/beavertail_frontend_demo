@@ -48,7 +48,7 @@ const SignUpScreen = ({ navigation }) => {
             <Text style={styles.link}>Terms of Use </Text>and{' '}
             <Text style={styles.link}>Privacy Policy.</Text>
           </Text>
-          <CustomButton text="Register" onPress={() => register(lastName, firstName, username, email, password, Confpassword, navigation)} />
+          <CustomButton text="Register" onPress={() => register(firstName, lastName, username, email, password, Confpassword, navigation)} />
           <Text>Already have an account?</Text>
           <CustomButton text="Login" onPress={() => navigation.navigate('SignIn')} type="SECONDARY" />
         </View>
