@@ -36,19 +36,20 @@ const styles = StyleSheet.create({
     marginTop: 100
   },
   welcome: {
-    fontSize: 18,
+    fontSize: 22,
     marginBottom: 8,
   },
   serviceButton: {
     backgroundColor: '#fff',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     borderRadius: 5,
     margin: 5,
   },
   serviceText: {
     color: '#06bcee',
     fontWeight: 'bold',
+    fontSize: '18px'
   },
 });
 

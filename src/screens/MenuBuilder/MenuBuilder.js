@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { ScrollView, View, Text, TextInput, Button, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { ScrollView, View, Text, TextInput, Button, StyleSheet, FlatList, TouchableOpacity, Picker } from 'react-native';
 import Spinner from 'react-native-loading-spinner-overlay';
 import { AuthContext } from '../../context/AuthContext.js'
 import { useNavigation } from '@react-navigation/native';
@@ -14,24 +14,8 @@ const MenuBuilder = () => {
     const [searchResults, setSearchResults] = useState([]);
     const [ingredients, setIngredient] = useState([]);
     const [selectedIngredient, setSelectedIngredient] = useState({});
-
-    const getIngredients = async () => {
-        try {
-            const user = { userId: userInfo.user.userId };
-            const result = await client.post('/get-ingredients', user, {
-                headers: { 'Content-Type': 'application/json' },
-            })
-            console.log(result.data.ingredients);
-            setIngredient(result.data.ingredients)
-        } catch (error) {
-            console.log(`getting recipes error ${error}`);
-        }
-    }
-
-    useEffect(() => {
-        getIngredients();
-    }, []);
-
+    const [currentCost, setCurrentCost] = useState();
+    const [unitMaps, setUnitMaps] = useState([]);
     const [recipeData, setRecipeData] = useState({
         userId: userInfo.user.userId,
         name: '',
@@ -43,6 +27,66 @@ const MenuBuilder = () => {
         menuPrice: '',
         menuType: '',
     });
+
+    const categories = ['Roll', 'Pizza', 'Burger', 'Drink', 'Starter', 'Snacks'];
+    const menuTypes = ['Special', 'Breads', 'Breakfast', 'MainCourse', 'Starters', 'Chefs Special', 'Shakes'];
+
+    const getIngredients = async () => {
+        try {
+            const user = { userId: userInfo.user.userId };
+            const result = await client.post('/get-ingredients', user, {
+                headers: { 'Content-Type': 'application/json' },
+            })
+            setIngredient(result.data.ingredients)
+        } catch (error) {
+            console.log(`getting recipes error ${error}`);
+        }
+    }
+    const getUnitMaps = async () => {
+        try {
+            const user = { userId: userInfo.user.userId };
+            const result = await client.post('/get-unitmaps', user, {
+                headers: { 'Content-Type': 'application/json' },
+            })
+            setUnitMaps(result.data.unitMaps)
+        } catch (error) {
+            console.log(`getting unitmaps error ${error}`);
+        }
+    }
+    const costEstimation = async () => {
+        let totalCost = 0;
+
+        for (const ingredient of recipeData.ingredients) {
+
+            const matchingIngredient = ingredients.find(
+                (allIngredient) => allIngredient._id.toString() === ingredient.ingredient_id
+            );
+
+            if (matchingIngredient && ingredient.quantity !== '' && ingredient.unit !== '') {
+                const unitMap = unitMaps.find(
+                    (unitMap) => unitMap.ingredient_id.toString() === ingredient.ingredient_id
+                );
+                const toUnit = unitMap ? unitMap.toUnit : ingredient.unit;
+                const convertedQuantity = ingredient.quantity * getConversionFactor(ingredient.unit, toUnit, unitMap.fromUnit);
+                const costPerUnit = matchingIngredient.avgCost / getConversionFactor(matchingIngredient.invUnit, toUnit, unitMap.fromUnit) || 0;
+                totalCost += costPerUnit * convertedQuantity;
+            }
+        }
+
+        setCurrentCost(totalCost);
+    }
+
+    const getConversionFactor = (fromUnit, toUnit, fromUnitArray) => {
+        const conversionObject = fromUnitArray.find((unit) => unit.unit === fromUnit);
+        return conversionObject ? conversionObject.conversion : 1;
+    };
+
+    useEffect(() => {
+        getIngredients();
+        getUnitMaps();
+        costEstimation();
+    }, [recipeData]);
+
 
     const handleYieldsChange = (index, field, value) => {
         const updatedYields = [...recipeData.yields];
@@ -56,7 +100,7 @@ const MenuBuilder = () => {
             ingredient.name.toLowerCase().includes(text.toLowerCase())
         );
         setSearchResults(results);
-        if(text.length == 0) {
+        if (text.length == 0) {
             setSearchResults([])
         }
     };
@@ -89,6 +133,18 @@ const MenuBuilder = () => {
             ...recipeData,
             [arrayName]: [...recipeData[arrayName], {}],
         });
+    };
+
+    const handleDeleteIngredient = (index) => {
+        const updatedIngredients = [...recipeData.ingredients];
+        updatedIngredients.splice(index, 1);
+        setRecipeData({ ...recipeData, ingredients: updatedIngredients });
+    };
+
+    const handleDeleteYield = (index) => {
+        const updatedYields = [...recipeData.yields];
+        updatedYields.splice(index, 1);
+        setRecipeData({ ...recipeData, yields: updatedYields });
     };
 
     const onDrop = (acceptedFiles) => {
@@ -161,11 +217,16 @@ const MenuBuilder = () => {
 
                 <View style={styles.inputContainer}>
                     <Text style={styles.label}>Category:</Text>
-                    <TextInput
+                    <Picker
                         style={styles.input}
-                        value={recipeData.category}
-                        onChangeText={(text) => setRecipeData({ ...recipeData, category: text })}
-                    />
+                        selectedValue={recipeData.category}
+                        onValueChange={(itemValue) => setRecipeData({ ...recipeData, category: itemValue })}
+                    >
+                        <Picker.Item label="Select a category" value="" />
+                        {categories.map((category, index) => (
+                            <Picker.Item key={index} label={category} value={category} />
+                        ))}
+                    </Picker>
                 </View>
 
                 <View style={styles.inputContainer}>
@@ -185,6 +246,12 @@ const MenuBuilder = () => {
                                 value={yieldItem.unit}
                                 onChangeText={(text) => handleYieldsChange(index, 'unit', text)}
                             />
+                            <TouchableOpacity
+                                style={styles.deleteBtn}
+                                onPress={() => handleDeleteYield(index)}
+                            >
+                                <Text style={{ color: 'white' }}>Delete</Text>
+                            </TouchableOpacity>
                         </View>
                     ))}
                     <Button style={styles.addBtn} title="Add Yield" onPress={() => handleAddItem('yields')} />
@@ -198,7 +265,7 @@ const MenuBuilder = () => {
                     </div>
                     {recipeData.photo && (
                         // <Image source={{ uri: recipeData.photo }} style={styles.imagePreview} />
-                        <Text style={{color: 'green'}}>Image Uploaded Successfully!</Text>
+                        <Text style={{ color: 'green' }}>Image Uploaded Successfully!</Text>
                     )}
                 </View>
 
@@ -271,20 +338,33 @@ const MenuBuilder = () => {
                                 value={ingredient.quantity ? ingredient.quantity.toString() : ''}
                                 onChangeText={(text) => handleIngredientsChange(index, 'quantity', parseFloat(text))}
                             />
-                            <TextInput
+                            <Picker
                                 style={styles.smallInput}
-                                placeholder="Unit"
-                                value={ingredient.unit}
-                                onChangeText={(text) => handleIngredientsChange(index, 'unit', text)}
-                            />
+                                selectedValue={ingredient.unit}
+                                onValueChange={(itemValue) => handleIngredientsChange(index, 'unit', itemValue)}
+                            >
+                                <Picker.Item label="Unit" value="" />
+                                {
+                                    unitMaps.find(map => map.ingredient_id === ingredient.ingredient_id)?.fromUnit.map((unit, index) => (
+                                        <Picker.Item key={index} label={unit.unit} value={unit.unit} />
+                                    ))
+                                }
+                            </Picker>
                             <TextInput
                                 style={styles.smallInput}
                                 placeholder="Notes"
                                 value={ingredient.notes}
                                 onChangeText={(text) => handleIngredientsChange(index, 'notes', text)}
                             />
+                            <TouchableOpacity
+                                style={styles.deleteBtn}
+                                onPress={() => handleDeleteIngredient(index)}
+                            >
+                                <Text style={{ color: 'white' }}>Delete</Text>
+                            </TouchableOpacity>
                         </View>
                     ))}
+                    <Text style={{fontSize: '15px', fontWeight: 'bold'}}>Estimated Cost: <span style={{ color: 'green' }}>${currentCost}</span></Text>
                 </View>
 
                 <View style={styles.inputContainer}>
@@ -299,11 +379,16 @@ const MenuBuilder = () => {
 
                 <View style={styles.inputContainer}>
                     <Text style={styles.label}>Menu Type:</Text>
-                    <TextInput
+                    <Picker
                         style={styles.input}
-                        value={recipeData.menuType}
-                        onChangeText={(text) => setRecipeData({ ...recipeData, menuType: text })}
-                    />
+                        selectedValue={recipeData.menuType}
+                        onValueChange={(itemValue) => setRecipeData({ ...recipeData, menuType: itemValue })}
+                    >
+                        <Picker.Item label="Select a type" value="" />
+                        {menuTypes.map((type, index) => (
+                            <Picker.Item key={index} label={type} value={type} />
+                        ))}
+                    </Picker>
                 </View>
 
                 <Button style={styles.createBtn} title="Create Recipe" onPress={handleSubmit} />
@@ -333,6 +418,7 @@ const styles = {
     input: {
         height: 40,
         borderColor: 'gray',
+        backgroundColor: '#fff',
         borderWidth: 1,
         paddingHorizontal: 10,
         marginBottom: 12,
@@ -341,6 +427,7 @@ const styles = {
     multilineInput: {
         height: 120,
         borderRadius: 8,
+        backgroundColor: '#fff',
     },
     rowContainer: {
         flexDirection: 'row',
@@ -355,6 +442,7 @@ const styles = {
         borderRadius: 8,
         paddingHorizontal: 10,
         marginRight: 8,
+        backgroundColor: '#fff',
     },
     smallInputNonEditable: {
         flex: 1,
@@ -371,8 +459,9 @@ const styles = {
         paddingLeft: 10,
         paddingRight: 40,
         borderWidth: 1,
-        borderRadius: 5,
-        marginBottom: 10
+        borderRadius: 20,
+        marginBottom: 10,
+        backgroundColor: '#fff',
     },
     dropdownMenu: {
         zIndex: 1,
@@ -399,6 +488,13 @@ const styles = {
         alignItems: 'center',
         borderRadius: 5,
         marginTop: 10,
+    },
+    deleteBtn: {
+        backgroundColor: 'red',
+        padding: 8,
+        borderRadius: 5,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     imagePreview: {
         width: 200,
