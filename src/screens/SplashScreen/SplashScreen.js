@@ -14,13 +14,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: 'center',
-    marginTop: 380,
+    // marginTop: 380,
 
   },
   horizontal: {
     flex: 1,
-
-
   }
 });
 

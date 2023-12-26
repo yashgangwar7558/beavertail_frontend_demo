@@ -7,7 +7,7 @@ import SplashScreen from './src/screens/SplashScreen'
 
 const App = () => {
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: 'black' }}>
+    <SafeAreaView style={styles.container}>
       <AuthProvider>
         <StatusBar backgroundColor="#06bcee" />
         <Navigation />
@@ -20,9 +20,6 @@ export default App;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });
 

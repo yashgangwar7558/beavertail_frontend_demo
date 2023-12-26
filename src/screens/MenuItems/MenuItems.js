@@ -1,7 +1,10 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Image, ActivityIndicator, TextInput } from 'react-native';
 import { Button, DataTable } from 'react-native-paper';
 import Modal from 'react-native-modal';
+import Icon from 'react-native-vector-icons/FontAwesome';
+// import Icon from 'react-native-vector-icons/AntDesign';
+import RNPrint from 'react-native-print';
 import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../../context/AuthContext.js'
 import Navbar from '../../components/Navbar';
@@ -12,15 +15,18 @@ const MenuItems = () => {
     const { userInfo, isLoading, logout } = useContext(AuthContext);
     const [recipes, setRecipes] = useState([]);
     const [selectedRecipe, setSelectedRecipe] = useState(null);
+    const [loading, setLoading] = useState(false);
 
     const getRecipes = async () => {
         try {
+            setLoading(true)
             const user = { userId: userInfo.user.userId };
             const result = await client.post('/get-recipes', user, {
                 headers: { 'Content-Type': 'application/json' },
             })
             console.log(result.data.recipes);
             setRecipes(result.data.recipes)
+            setLoading(false)
         } catch (error) {
             console.log(`getting recipes error ${error}`);
         }
@@ -60,10 +66,44 @@ const MenuItems = () => {
                 <Navbar heading="Menu Items" />
             </View>
             <View style={styles.container}>
-                <TouchableOpacity onPress={() => navigation.navigate('MenuBuilder')} style={styles.addButton}>
-                    <Text style={styles.addText}>Add new item</Text>
-                </TouchableOpacity>
-
+                <View style={styles.tableNav}>
+                    <View style={styles.tableButtonContainer}>
+                        <View style={styles.leftTableButtons}>
+                            <Icon.Button
+                                style={styles.tableNavBtn}
+                                name="plus"
+                                onPress={() => navigation.navigate('MenuBuilder')}
+                                backgroundColor="transparent"
+                                iconStyle={{ fontSize: 22, paddingHorizontal: 5 }}
+                                color={"white"}
+                            >
+                                <Text style={{ color: 'white', fontSize: 15, marginRight: 5 }}>Add a New Menu Item</Text>
+                            </Icon.Button>
+                        </View>
+                        <View style={styles.rightTableButtons}>
+                            <Icon.Button
+                                style={styles.tableNavBtn}
+                                name="angle-down"
+                                onPress={() => navigation.navigate('MenuBuilder')}
+                                backgroundColor="transparent"
+                                iconStyle={{ fontSize: 22, paddingHorizontal: 5 }}
+                                color={"white"}
+                            >
+                                <Text style={{ color: 'white', fontSize: 15, marginRight: 5 }}>Export As</Text>
+                            </Icon.Button>
+                        </View>
+                    </View>
+                    <View style={styles.searchContainer}>
+                        <TextInput
+                            style={styles.tableSearchBar}
+                            placeholder='Search'
+                            placeholderTextColor="gray"
+                        />
+                        <View style={styles.searchIcon}>
+                            <Icon name="search" size={20} color="gray" />
+                        </View>
+                    </View>
+                </View>
                 {/* Table */}
                 <DataTable style={styles.dataTable}>
                     <DataTable.Header style={styles.header}>
@@ -76,21 +116,26 @@ const MenuItems = () => {
                         <DataTable.Title style={styles.headerCell}>Cost %</DataTable.Title>
                     </DataTable.Header>
 
-                    {recipes.map((item, index) => (
-                        <TouchableOpacity key={index} onPress={() => handleRecipeClick(item)}>
-                            <DataTable.Row
-                                style={index % 2 === 0 ? styles.evenRow : styles.oddRow}
-                            >
-                                <DataTable.Cell style={styles.cell}>{item.name}</DataTable.Cell>
-                                <DataTable.Cell style={styles.cell}>{item.category}</DataTable.Cell>
-                                <DataTable.Cell style={styles.cell}>{item.inventory ? 'Yes' : 'No'}</DataTable.Cell>
-                                <DataTable.Cell style={styles.cell}>${(item.cost).toFixed(2)}</DataTable.Cell>
-                                <DataTable.Cell style={styles.cell}>${(item.menuPrice).toFixed(2)}</DataTable.Cell>
-                                <DataTable.Cell style={[styles.cell, { backgroundColor: (item.menuPrice - item.cost) < 0 ? '#ed6d7b' : '#8eeda8' }]}>${(item.menuPrice - item.cost).toFixed(2)}</DataTable.Cell>
-                                <DataTable.Cell style={[styles.cell, { backgroundColor: (item.menuPrice - item.cost) < 0 ? '#ed6d7b' : '#8eeda8' }]}>{((item.cost / item.menuPrice) * 100).toFixed(1)}%</DataTable.Cell>
-                            </DataTable.Row>
-                        </TouchableOpacity>
-                    ))}
+                    {loading ? (
+                        <ActivityIndicator size="large" color="#0000ff" style={{ marginTop: 10 }} />
+                    ) : (
+                        recipes.map((item, index) => (
+                            <TouchableOpacity key={index} onPress={() => handleRecipeClick(item)}>
+                                <DataTable.Row
+                                    style={index % 2 === 0 ? styles.evenRow : styles.oddRow}
+                                >
+                                    <DataTable.Cell style={styles.cell}>{item.name}</DataTable.Cell>
+                                    <DataTable.Cell style={styles.cell}>{item.category}</DataTable.Cell>
+                                    <DataTable.Cell style={styles.cell}>{item.inventory ? 'Yes' : 'No'}</DataTable.Cell>
+                                    <DataTable.Cell style={styles.cell}>${(item.cost).toFixed(2)}</DataTable.Cell>
+                                    <DataTable.Cell style={styles.cell}>${(item.menuPrice).toFixed(2)}</DataTable.Cell>
+                                    <DataTable.Cell style={[styles.cell, { backgroundColor: (item.menuPrice - item.cost) < 0 ? '#ed6d7b' : '#8eeda8' }]}>${(item.menuPrice - item.cost).toFixed(2)}</DataTable.Cell>
+                                    <DataTable.Cell style={[styles.cell, { backgroundColor: (item.menuPrice - item.cost) < 0 ? '#ed6d7b' : '#8eeda8' }]}>{((item.cost / item.menuPrice) * 100).toFixed(1)}%</DataTable.Cell>
+                                </DataTable.Row>
+                            </TouchableOpacity>
+                        ))
+                    )
+                    }
                 </DataTable>
             </View>
 
@@ -100,8 +145,20 @@ const MenuItems = () => {
                     {selectedRecipe && (
                         <View style={styles.recipeContainer}>
                             <View style={styles.recipeNameNavbar}>
-                                <Text style={[styles.uppercaseText, { fontWeight: 'bold', color: 'white', fontSize: '18px' }]}>{selectedRecipe.name}</Text>
-                                <Button onPress={closeModal}>Close</Button>
+                                <Icon.Button
+                                    name="list-alt"
+                                    backgroundColor="transparent"
+                                    iconStyle={{ fontSize: 20, marginRight: 5, padding: 0 }}
+                                    color={"white"}>
+                                    <Text style={[styles.uppercaseText, { fontWeight: '500', color: 'white', fontSize: '18px' }]}>{selectedRecipe.name}</Text>
+                                </Icon.Button>
+                                <Icon.Button
+                                    name="times"
+                                    onPress={closeModal}
+                                    backgroundColor="transparent"
+                                    iconStyle={{ fontSize: 20, padding: 0, margin: 0 }}
+                                    color={"white"}>
+                                </Icon.Button>
                             </View>
                             <ScrollView>
                                 <View style={styles.recipeDetails}>
@@ -120,18 +177,56 @@ const MenuItems = () => {
                                 </View>
                             </ScrollView>
                             <View style={styles.recipeButtons}>
-                                <Button style={styles.button}>
-                                    <Text style={styles.buttonText}>Edit Recipe</Text>
-                                </Button>
-                                <Button style={styles.button} onPress={() => { deleteRecipe(selectedRecipe._id) }}>
-                                    <Text style={styles.buttonText}>Delete</Text>
-                                </Button>
-                                <Button style={styles.button}>
-                                    <Text style={styles.buttonText}>Copy Recipe</Text>
-                                </Button>
-                                <Button style={styles.button}>
-                                    <Text style={styles.buttonText}>Print</Text>
-                                </Button>
+                                <View style={styles.leftButtonsContainer}>
+                                    <Icon.Button
+                                        style={styles.blueBtn}
+                                        name="edit"
+                                        backgroundColor="transparent"
+                                        iconStyle={{ fontSize: 19 }}
+                                        color={"white"}
+                                    >
+                                        <Text style={{ color: 'white', fontSize: 14 }}>Edit Recipe</Text>
+                                    </Icon.Button>
+                                    <Icon.Button
+                                        style={styles.blueBtn}
+                                        name="trash"
+                                        onPress={() => { deleteRecipe(selectedRecipe._id) }}
+                                        backgroundColor="transparent"
+                                        iconStyle={{ fontSize: 19 }}
+                                        color={"white"}
+                                    >
+                                        <Text style={{ color: 'white', fontSize: 14 }}>Delete Recipe</Text>
+                                    </Icon.Button>
+                                    <Icon.Button
+                                        style={styles.blueBtn}
+                                        name="print"
+                                        backgroundColor="transparent"
+                                        iconStyle={{ fontSize: 19 }}
+                                        color={"white"}
+                                    >
+                                        <Text style={{ color: 'white', fontSize: 14 }}>Print</Text>
+                                    </Icon.Button>
+                                </View>
+                                <View style={styles.rightButtonsContainer}>
+                                    <Icon.Button
+                                        style={styles.blueTransparentBtn}
+                                        name="line-chart"
+                                        backgroundColor="transparent"
+                                        iconStyle={{ fontSize: 19 }}
+                                        color={"#0071cd"}
+                                    >
+                                        <Text style={{ color: '#0071cd', fontSize: 14 }}>Recipe Cost History</Text>
+                                    </Icon.Button>
+                                    <Icon.Button
+                                        style={styles.blueTransparentBtn}
+                                        name="history"
+                                        backgroundColor="transparent"
+                                        iconStyle={{ fontSize: 19 }}
+                                        color={"#0071cd"}
+                                    >
+                                        <Text style={{ color: '#0071cd', fontSize: 14 }}>History</Text>
+                                    </Icon.Button>
+                                </View>
                             </View>
                         </View>
                     )}
@@ -146,37 +241,72 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 80,
+        backgroundColor: 'white',
+        marginTop: 60,
     },
-    addButton: {
+    tableNav: {
+        width: '100%',
+        flexDirection: 'column',
+        padding: 12,
+        backgroundColor: '#e8e8e8',
+    },
+    tableButtonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    leftTableButtons: {
+        flexDirection: 'row'
+    },
+    rightTableButtons: {
+        flexDirection: 'row'
+    },
+    tableNavBtn: {
+        position: "relative",
+        height: 40,
+        margin: 3,
+        borderRadius: 30,
+        backgroundColor: "#0071cd",
+        justifyContent: "center"
+    },
+    searchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 10,
+        marginBottom: 10
+    },
+    tableSearchBar: {
+        flex: 1,
+        height: 40,
         backgroundColor: '#fff',
-        paddingVertical: 5,
-        paddingHorizontal: 10,
+        border: '1px solid gray',
         borderRadius: 5,
-        margin: 5,
+        paddingHorizontal: 10,
     },
-    addText: {
-        color: '#06bcee',
-        fontWeight: 'bold',
+    searchIcon: {
+        marginLeft: 10,
     },
     dataTable: {
-        marginTop: 20,
+        marginTop: 5,
     },
     header: {
         borderBottomWidth: 1,
         borderBottomColor: 'black',
+        fontWeight: 'bold',
+        fontSize: 12,
     },
     headerCell: {
         paddingLeft: 10,
+        fontWeight: 'bold',
+        fontSize: 12,
     },
     cell: {
         paddingLeft: 10,
     },
     evenRow: {
-        backgroundColor: '#fff',
+        backgroundColor: '#f2f0f0',
     },
     oddRow: {
-        backgroundColor: '#f2f0f0',
+        backgroundColor: '#fff',
     },
     modalContainer: {
         flex: 1,
@@ -184,7 +314,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         margin: 20,
-        borderRadius: 10,
+        borderRadius: 5,
         maxHeight: '80%',
         width: '70%',
         alignSelf: 'center',
@@ -193,7 +323,8 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
         backgroundColor: '#fff',
-        borderRadius: 10,
+        border: '3.5px solid #4697ce',
+        borderRadius: 5,
         overflow: 'hidden',
     },
     recipeNameNavbar: {
@@ -201,7 +332,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: 5,
-        backgroundColor: '#06bcee',
+        backgroundColor: '#4697ce',
         color: '#fff',
     },
     uppercaseText: {
@@ -220,7 +351,7 @@ const styles = StyleSheet.create({
     },
     imageContainer: {
         flex: 1,
-        justifyContent: 'center',
+        justifyContent: 'centre',
         alignItems: 'center',
     },
     recipeImage: {
@@ -231,26 +362,42 @@ const styles = StyleSheet.create({
     },
     recipeButtons: {
         flexDirection: 'row',
-        justifyContent: 'flex-start',
+        justifyContent: 'space-between',
         alignItems: 'center',
         padding: 10,
-        borderTopWidth: 1,
-        borderTopColor: '#ccc',
     },
-    button: {
-        backgroundColor: '#06bcee',
-        paddingVertical: 4,
-        paddingHorizontal: 7,
-        marginRight: 15,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#06bcee',
+    leftButtonsContainer: {
+        flexDirection: 'row',
     },
-    buttonText: {
-        color: '#fff',
-        textAlign: 'center',
-        fontWeight: 'bold',
+    rightButtonsContainer: {
+        flexDirection: 'row',
     },
+    blueBtn: {
+        position: "relative",
+        // width: 200,
+        height: 35,
+        marginRight: 5,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 30,
+        // borderWidth: 2,
+        // borderColor: "#2bb378",
+        backgroundColor: "#0071cd",
+        justifyContent: "center"
+    },
+    blueTransparentBtn: {
+        position: "relative",
+        // width: 200,
+        height: 35,
+        marginRight: 5,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 30,
+        borderWidth: 2,
+        borderColor: "#0071cd",
+        // backgroundColor: "#0071cd",
+        justifyContent: "center"
+    }
 });
 
 export default MenuItems;

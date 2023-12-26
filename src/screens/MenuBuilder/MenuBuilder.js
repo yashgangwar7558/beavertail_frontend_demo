@@ -3,13 +3,17 @@ import { ScrollView, View, Text, TextInput, Button, StyleSheet, FlatList, Toucha
 import Spinner from 'react-native-loading-spinner-overlay';
 import { AuthContext } from '../../context/AuthContext.js'
 import { useNavigation } from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import Navbar from '../../components/Navbar'
 import { useDropzone } from 'react-dropzone';
 import client from '../../config.js'
+import LoadingScreen from '../../components/LoadingScreen';
 
 const MenuBuilder = () => {
     const navigation = useNavigation();
     const { userInfo, isLoading, logout } = useContext(AuthContext);
+    const [loading, setLoading] = useState(false);
+    const [isFocused, setIsFocused] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [ingredients, setIngredient] = useState([]);
@@ -30,6 +34,7 @@ const MenuBuilder = () => {
 
     const categories = ['Roll', 'Pizza', 'Burger', 'Drink', 'Starter', 'Snacks'];
     const menuTypes = ['Special', 'Breads', 'Breakfast', 'MainCourse', 'Starters', 'Chefs Special', 'Shakes'];
+    const yieldUnits = ['Each', 'Serving'];
 
     const getIngredients = async () => {
         try {
@@ -158,6 +163,7 @@ const MenuBuilder = () => {
 
     const handleSubmit = async () => {
         try {
+            setLoading(true)
             console.log(recipeData);
             const data = new FormData();
             data.append('userId', recipeData.userId);
@@ -188,13 +194,18 @@ const MenuBuilder = () => {
                     menuType: '',
                 });
                 navigation.replace('MenuItems');
+                setLoading(false)
             } else {
+                setLoading(false)
                 alert(result.data.message)
             }
         } catch (error) {
             console.log(`create recipe error ${error}`);
+            setLoading(false)
         }
     };
+
+    // <==================================================================================================================================>
 
     return (
         <View style={{ flex: 1 }}>
@@ -202,27 +213,38 @@ const MenuBuilder = () => {
 
             <ScrollView
                 style={styles.formContainer}
-                contentContainerStyle={{ paddingTop: 100 }}
+                contentContainerStyle={{ paddingTop: 85 }}
                 stickyHeaderIndices={[0]}
             >
 
+                <Text style={{ fontSize: '30px', fontWeight: 'bold', fontFamily: 'Roboto' }}>Add a New Prepared Item</Text>
+
+                <View
+                    style={{
+                        marginTop: 30,
+                        marginBottom: 15,
+                        borderBottomColor: '#d1d1d1',
+                        borderBottomWidth: StyleSheet.hairlineWidth,
+                    }}
+                />
+
                 <View style={styles.inputContainer}>
-                    <Text style={styles.label}>Recipe Name:</Text>
+                    <Text style={styles.label}>Name</Text>
                     <TextInput
-                        style={styles.input}
+                        style={[styles.input]}
                         value={recipeData.name}
                         onChangeText={(text) => setRecipeData({ ...recipeData, name: text })}
                     />
                 </View>
 
                 <View style={styles.inputContainer}>
-                    <Text style={styles.label}>Category:</Text>
+                    <Text style={styles.label}>Type</Text>
                     <Picker
                         style={styles.input}
                         selectedValue={recipeData.category}
                         onValueChange={(itemValue) => setRecipeData({ ...recipeData, category: itemValue })}
                     >
-                        <Picker.Item label="Select a category" value="" />
+                        <Picker.Item label="Select a Recipe Type..." value="" />
                         {categories.map((category, index) => (
                             <Picker.Item key={index} label={category} value={category} />
                         ))}
@@ -230,49 +252,72 @@ const MenuBuilder = () => {
                 </View>
 
                 <View style={styles.inputContainer}>
-                    <Text style={styles.label}>Yields:</Text>
+                    <Text style={styles.label}>Yields<span>  </span>
+                        <Icon.Button style={styles.greenBtn}
+                            name="plus-circle"
+                            backgroundColor="transparent"
+                            color={"#2bb378"}
+                            onPress={() => handleAddItem('yields')}>
+                            <Text style={{ color: '#2bb378', fontSize: 15 }}>Add Yields</Text>
+                        </Icon.Button>
+                    </Text>
                     {recipeData.yields.map((yieldItem, index) => (
                         <View key={index} style={styles.rowContainer}>
                             <TextInput
                                 style={styles.smallInput}
                                 keyboardType='numeric'
-                                placeholder="Quantity"
+                                placeholder="Enter a quantity"
+                                placeholderTextColor="gray"
                                 value={yieldItem.quantity ? yieldItem.quantity.toString() : ''}
                                 onChangeText={(text) => handleYieldsChange(index, 'quantity', parseFloat(text))}
                             />
-                            <TextInput
+                            <Picker
                                 style={styles.smallInput}
-                                placeholder="Unit"
-                                value={yieldItem.unit}
-                                onChangeText={(text) => handleYieldsChange(index, 'unit', text)}
-                            />
-                            <TouchableOpacity
-                                style={styles.deleteBtn}
-                                onPress={() => handleDeleteYield(index)}
+                                selectedValue={recipeData.yields.unit}
+                                onValueChange={(itemValue) => handleYieldsChange(index, 'unit', itemValue)}
                             >
-                                <Text style={{ color: 'white' }}>Delete</Text>
-                            </TouchableOpacity>
+                                <Picker.Item label="Select a unit..." value="" />
+                                {yieldUnits.map((unit, index) => (
+                                    <Picker.Item key={index} label={unit} value={unit} />
+                                ))}
+                            </Picker>
+                            <Icon.Button style={styles.crossBtn}
+                                name="times-circle-o"
+                                onPress={() => handleDeleteYield(index)}
+                                backgroundColor="transparent"
+                                iconStyle={{ margin: 0, padding: 0, fontSize: 25 }}
+                                color={"gray"}>
+                            </Icon.Button>
                         </View>
                     ))}
-                    <Button style={styles.addBtn} title="Add Yield" onPress={() => handleAddItem('yields')} />
                 </View>
 
                 <View style={styles.inputContainer}>
-                    <Text style={styles.label}>Upload photo:</Text>
+                    <Text style={styles.label}>Media<span>  </span>
+                        <Icon.Button style={styles.greenBtn}
+                            name="camera"
+                            backgroundColor="transparent"
+                            iconStyle={{ fontSize: 18 }}
+                            color={"#2bb378"}>
+                            <Text style={{ color: '#2bb378', fontSize: 15 }}>Add Media</Text>
+                        </Icon.Button>
+                    </Text>
                     <div {...getRootProps()} style={styles.dropzone}>
                         <input {...getInputProps()} />
-                        <p>Drag 'n' drop an image here, or click to select one</p>
+                        <p>Drag 'n' drop your media here, or click to select one</p>
                     </div>
                     {recipeData.photo && (
                         // <Image source={{ uri: recipeData.photo }} style={styles.imagePreview} />
-                        <Text style={{ color: 'green' }}>Image Uploaded Successfully!</Text>
+                        <Text style={{ color: '#2bb378' }}>Image Uploaded Successfully!</Text>
                     )}
                 </View>
 
                 <View style={styles.inputContainer}>
-                    <Text style={styles.label}>Method of Preparation:</Text>
+                    <Text style={styles.label}>Method of Preparation</Text>
                     <TextInput
                         style={[styles.input, styles.multilineInput]}
+                        placeholder='Type your recipe steps'
+                        placeholderTextColor="gray"
                         multiline
                         numberOfLines={4}
                         value={recipeData.methodPrep}
@@ -281,17 +326,53 @@ const MenuBuilder = () => {
                 </View>
 
                 <View style={styles.inputContainer}>
-                    <Text style={styles.label}>Ingredients:</Text>
+                    <Text style={styles.label}>Ingredients<span>  </span>
+                        <Icon.Button style={styles.greenBtn}
+                            name="plus-circle"
+                            backgroundColor="transparent"
+                            color={"#2bb378"}>
+                            <Text style={{ color: '#2bb378', fontSize: 15 }}>Add Food</Text>
+                        </Icon.Button><span>   </span>
+                        <Icon.Button style={styles.greenBtn}
+                            name="plus-circle"
+                            backgroundColor="transparent"
+                            color={"#2bb378"}>
+                            <Text style={{ color: '#2bb378', fontSize: 15 }}>Add Non-Alcoholic Beverage</Text>
+                        </Icon.Button><span>   </span>
+                        <Icon.Button style={styles.greenBtn}
+                            name="plus-circle"
+                            backgroundColor="transparent"
+                            color={"#2bb378"}>
+                            <Text style={{ color: '#2bb378', fontSize: 15 }}>Add Alcohol</Text>
+                        </Icon.Button><span>   </span>
+                        <Icon.Button style={styles.greenBtn}
+                            name="plus-circle"
+                            backgroundColor="transparent"
+                            color={"#2bb378"}>
+                            <Text style={{ color: '#2bb378', fontSize: 15 }}>Add Recipe</Text>
+                        </Icon.Button><span>   </span>
+                        <Icon.Button style={styles.redBtn}
+                            name="times"
+                            backgroundColor="transparent"
+                            color={"#ff3131"}>
+                            <Text style={{ color: '#ff3131', fontSize: 15 }}>Delete Ingredients</Text>
+                        </Icon.Button>
+                    </Text>
                     {/* Search Input */}
-                    <TextInput
-                        style={styles.searchBar}
-                        placeholder="Search ingredients"
-                        value={searchTerm}
-                        onChangeText={(text) => {
-                            setSearchTerm(text);
-                            handleIngredientSearch(text);
-                        }}
-                    />
+                    <View style={styles.searchBarContainer}>
+                        <Icon name="search" size={20} color="gray" style={styles.searchIcon} />
+                        <TextInput
+                            style={styles.searchBar}
+                            placeholder="Search Ingredient"
+                            placeholderTextColor="gray"
+                            selectTextOnFocus={false}
+                            value={searchTerm}
+                            onChangeText={(text) => {
+                                setSearchTerm(text);
+                                handleIngredientSearch(text);
+                            }}
+                        />
+                    </View>
                     {/* Search Results */}
                     {searchResults.length > 0 && (
                         <FlatList
@@ -313,14 +394,8 @@ const MenuBuilder = () => {
                         <View key={index} style={styles.rowContainer}>
                             <TextInput
                                 style={styles.smallInputNonEditable}
-                                placeholder="Ingredent Id"
-                                value={ingredient.ingredient_id}
-                                editable={false}
-                                onChangeText={(text) => handleIngredientsChange(index, 'ingredient_id', text)}
-                            />
-                            <TextInput
-                                style={styles.smallInputNonEditable}
                                 placeholder="Name"
+                                placeholderTextColor="gray"
                                 value={ingredient.name}
                                 editable={false}
                                 onChangeText={(text) => handleIngredientsChange(index, 'name', text)}
@@ -328,13 +403,15 @@ const MenuBuilder = () => {
                             <TextInput
                                 style={styles.smallInputNonEditable}
                                 placeholder="Category"
+                                placeholderTextColor="gray"
                                 value={ingredient.category}
                                 editable={false}
                                 onChangeText={(text) => handleIngredientsChange(index, 'category', text)}
                             />
                             <TextInput
                                 style={styles.smallInput}
-                                placeholder="Quantity"
+                                placeholder="Enter a Quantity"
+                                placeholderTextColor="gray"
                                 value={ingredient.quantity ? ingredient.quantity.toString() : ''}
                                 onChangeText={(text) => handleIngredientsChange(index, 'quantity', parseFloat(text))}
                             />
@@ -343,7 +420,7 @@ const MenuBuilder = () => {
                                 selectedValue={ingredient.unit}
                                 onValueChange={(itemValue) => handleIngredientsChange(index, 'unit', itemValue)}
                             >
-                                <Picker.Item label="Unit" value="" />
+                                <Picker.Item label="Select a Unit..." value="" />
                                 {
                                     unitMaps.find(map => map.ingredient_id === ingredient.ingredient_id)?.fromUnit.map((unit, index) => (
                                         <Picker.Item key={index} label={unit.unit} value={unit.unit} />
@@ -353,22 +430,24 @@ const MenuBuilder = () => {
                             <TextInput
                                 style={styles.smallInput}
                                 placeholder="Notes"
+                                placeholderTextColor="gray"
                                 value={ingredient.notes}
                                 onChangeText={(text) => handleIngredientsChange(index, 'notes', text)}
                             />
-                            <TouchableOpacity
-                                style={styles.deleteBtn}
+                            <Icon.Button style={styles.crossBtn}
+                                name="times-circle-o"
                                 onPress={() => handleDeleteIngredient(index)}
-                            >
-                                <Text style={{ color: 'white' }}>Delete</Text>
-                            </TouchableOpacity>
+                                backgroundColor="transparent"
+                                iconStyle={{ margin: 0, padding: 0, fontSize: 25 }}
+                                color={"gray"}>
+                            </Icon.Button>
                         </View>
                     ))}
-                    <Text style={{fontSize: '15px', fontWeight: 'bold'}}>Estimated Cost: <span style={{ color: 'green' }}>${currentCost}</span></Text>
+                    <Text style={{ fontSize: '15px', fontWeight: 'bold' }}>Estimated Cost: <span style={{ color: '#2bb378' }}>${currentCost}</span></Text>
                 </View>
 
                 <View style={styles.inputContainer}>
-                    <Text style={styles.label}>Menu Price:</Text>
+                    <Text style={styles.label}>Menu Price</Text>
                     <TextInput
                         style={styles.input}
                         keyboardType='numeric'
@@ -378,21 +457,32 @@ const MenuBuilder = () => {
                 </View>
 
                 <View style={styles.inputContainer}>
-                    <Text style={styles.label}>Menu Type:</Text>
+                    <Text style={styles.label}>Menu Type</Text>
                     <Picker
                         style={styles.input}
                         selectedValue={recipeData.menuType}
                         onValueChange={(itemValue) => setRecipeData({ ...recipeData, menuType: itemValue })}
                     >
-                        <Picker.Item label="Select a type" value="" />
+                        <Picker.Item label="Select a Menu Type..." value="" />
                         {menuTypes.map((type, index) => (
                             <Picker.Item key={index} label={type} value={type} />
                         ))}
                     </Picker>
                 </View>
 
-                <Button style={styles.createBtn} title="Create Recipe" onPress={handleSubmit} />
+                <Icon.Button
+                    style={styles.createBtn}
+                    onPress={handleSubmit}
+                    name="cutlery"
+                    backgroundColor="transparent"
+                    iconStyle={{ fontSize: 19 }}
+                    color={"white"}
+                >
+                    <Text style={{ color: 'white', fontSize: 20 }}>Create Recipe</Text>
+                </Icon.Button>
+
             </ScrollView>
+            {loading && <LoadingScreen />}
         </View>
     );
 };
@@ -400,7 +490,8 @@ const MenuBuilder = () => {
 const styles = {
     formContainer: {
         paddingBottom: 40,
-        paddingHorizontal: 100,
+        paddingHorizontal: 150,
+        backgroundColor: 'white'
     },
     heading: {
         fontSize: 24,
@@ -414,32 +505,40 @@ const styles = {
         fontSize: 16,
         marginBottom: 8,
         fontWeight: 'bold',
+        fontFamily: 'sans-serif',
+        fontSize: 16,
     },
     input: {
         height: 40,
-        borderColor: 'gray',
         backgroundColor: '#fff',
+        borderColor: 'gray',
         borderWidth: 1,
         paddingHorizontal: 10,
         marginBottom: 12,
-        borderRadius: 8,
+        borderRadius: 3,
     },
     multilineInput: {
         height: 120,
-        borderRadius: 8,
+        borderRadius: 3,
         backgroundColor: '#fff',
+        padding: 10,
     },
     rowContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 8,
+        marginBottom: 5,
+        borderWidth: 1,
+        borderColor: 'gray',
+        borderRadius: 3,
+        padding: 5,
+        backgroundColor: '#f2f2f2'
     },
     smallInput: {
         flex: 1,
         height: 40,
         borderColor: 'gray',
         borderWidth: 1,
-        borderRadius: 8,
+        borderRadius: 3,
         paddingHorizontal: 10,
         marginRight: 8,
         backgroundColor: '#fff',
@@ -449,19 +548,30 @@ const styles = {
         height: 40,
         borderColor: 'gray',
         borderWidth: 1,
-        borderRadius: 8,
+        borderRadius: 3,
         paddingHorizontal: 10,
         marginRight: 8,
         backgroundColor: '#e4e1e6'
     },
-    searchBar: {
-        height: 40,
-        paddingLeft: 10,
-        paddingRight: 40,
-        borderWidth: 1,
-        borderRadius: 20,
-        marginBottom: 10,
+    searchBarContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
         backgroundColor: '#fff',
+        borderColor: 'gray',
+        borderWidth: 1,
+        borderRadius: 30,
+        paddingHorizontal: 10,
+        marginBottom: 8
+    },
+    searchIcon: {
+        marginRight: 10,
+    },
+    searchBar: {
+        flex: 1,
+        height: 40,
+        color: 'black',
+        paddingHorizontal: 5,
+        border: 'none'
     },
     dropdownMenu: {
         zIndex: 1,
@@ -495,6 +605,38 @@ const styles = {
         borderRadius: 5,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    crossBtn: {
+        // justifyContent: 'center',
+        // alignItems: 'center',
+        // padding: 0
+        // margin: 0
+    },
+    greenBtn: {
+        borderRadius: 30,
+        borderWidth: 2,
+        borderColor: "#2bb378",
+        justifyContent: "center"
+    },
+    redBtn: {
+        borderRadius: 30,
+        borderWidth: 2,
+        borderColor: "#ff3131",
+        justifyContent: "center"
+    },
+    createBtn: {
+        position: "relative",
+        width: 185,
+        height: 45,
+        marginRight: 5,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 30,
+        // borderWidth: 2,
+        // borderColor: "#2bb378",
+        backgroundColor: "#0071cd",
+        justifyContent: "center",
+        alignSelf: "center"
     },
     imagePreview: {
         width: 200,
