@@ -56,7 +56,11 @@ const MenuItems = () => {
         }
     }
 
-    const closeModal = () => {
+    // const closeModal = () => {
+    //     setSelectedRecipe(null);
+    // };
+
+    const closeRecipeDetails = () => {
         setSelectedRecipe(null);
     };
 
@@ -104,44 +108,44 @@ const MenuItems = () => {
                         </View>
                     </View>
                 </View>
-                {/* Table */}
-                <DataTable style={styles.dataTable}>
-                    <DataTable.Header style={styles.header}>
-                        <DataTable.Title style={styles.headerCell}>Name</DataTable.Title>
-                        <DataTable.Title style={styles.headerCell}>Type</DataTable.Title>
-                        <DataTable.Title style={styles.headerCell}>On Inventory</DataTable.Title>
-                        <DataTable.Title style={styles.headerCell}>Cost</DataTable.Title>
-                        <DataTable.Title style={styles.headerCell}>Menu Price</DataTable.Title>
-                        <DataTable.Title style={styles.headerCell}>Net Profit</DataTable.Title>
-                        <DataTable.Title style={styles.headerCell}>Cost %</DataTable.Title>
-                    </DataTable.Header>
 
-                    {loading ? (
-                        <ActivityIndicator size="large" color="#0000ff" style={{ marginTop: 10 }} />
-                    ) : (
-                        recipes.map((item, index) => (
-                            <TouchableOpacity key={index} onPress={() => handleRecipeClick(item)}>
-                                <DataTable.Row
-                                    style={index % 2 === 0 ? styles.evenRow : styles.oddRow}
-                                >
-                                    <DataTable.Cell style={styles.cell}>{item.name}</DataTable.Cell>
-                                    <DataTable.Cell style={styles.cell}>{item.category}</DataTable.Cell>
-                                    <DataTable.Cell style={styles.cell}>{item.inventory ? 'Yes' : 'No'}</DataTable.Cell>
-                                    <DataTable.Cell style={styles.cell}>${(item.cost).toFixed(2)}</DataTable.Cell>
-                                    <DataTable.Cell style={styles.cell}>${(item.menuPrice).toFixed(2)}</DataTable.Cell>
-                                    <DataTable.Cell style={[styles.cell, { backgroundColor: (item.menuPrice - item.cost) < 0 ? '#ed6d7b' : '#8eeda8' }]}>${(item.menuPrice - item.cost).toFixed(2)}</DataTable.Cell>
-                                    <DataTable.Cell style={[styles.cell, { backgroundColor: (item.menuPrice - item.cost) < 0 ? '#ed6d7b' : '#8eeda8' }]}>{((item.cost / item.menuPrice) * 100).toFixed(1)}%</DataTable.Cell>
-                                </DataTable.Row>
-                            </TouchableOpacity>
-                        ))
-                    )
-                    }
-                </DataTable>
-            </View>
+                <View style={styles.splitScreenContainer}>
+                    <View style={styles.tableContainer}>
+                        {/* Table */}
+                        <DataTable style={styles.dataTable}>
+                            <DataTable.Header style={styles.header}>
+                                <DataTable.Title style={styles.headerCell}>Name</DataTable.Title>
+                                <DataTable.Title style={styles.headerCell}>Type</DataTable.Title>
+                                <DataTable.Title style={styles.headerCell}>On Inventory</DataTable.Title>
+                                <DataTable.Title style={styles.headerCell}>Cost</DataTable.Title>
+                                <DataTable.Title style={styles.headerCell}>Menu Price</DataTable.Title>
+                                <DataTable.Title style={styles.headerCell}>Net Profit</DataTable.Title>
+                                <DataTable.Title style={styles.headerCell}>Cost %</DataTable.Title>
+                            </DataTable.Header>
 
-            {/* Hover Screen */}
-            <Modal isVisible={selectedRecipe !== null} onBackdropPress={closeModal}>
-                <View style={styles.modalContainer}>
+                            {loading ? (
+                                <ActivityIndicator size="large" color="#0000ff" style={{ marginTop: 10 }} />
+                            ) : (
+                                recipes.map((item, index) => (
+                                    <TouchableOpacity key={index} onPress={() => handleRecipeClick(item)}>
+                                        <DataTable.Row
+                                            style={index % 2 === 0 ? styles.evenRow : styles.oddRow}
+                                        >
+                                            <DataTable.Cell style={styles.cell}>{item.name}</DataTable.Cell>
+                                            <DataTable.Cell style={styles.cell}>{item.category}</DataTable.Cell>
+                                            <DataTable.Cell style={styles.cell}>{item.inventory ? 'Yes' : 'No'}</DataTable.Cell>
+                                            <DataTable.Cell style={styles.cell}>${(item.cost).toFixed(2)}</DataTable.Cell>
+                                            <DataTable.Cell style={styles.cell}>${(item.menuPrice).toFixed(2)}</DataTable.Cell>
+                                            <DataTable.Cell style={[styles.cell, { backgroundColor: (item.menuPrice - item.cost) < 0 ? '#ed6d7b' : '#8eeda8' }]}>${(item.menuPrice - item.cost).toFixed(2)}</DataTable.Cell>
+                                            <DataTable.Cell style={[styles.cell, { backgroundColor: (item.menuPrice - item.cost) < 0 ? '#ed6d7b' : '#8eeda8' }]}>{((item.cost / item.menuPrice) * 100).toFixed(1)}%</DataTable.Cell>
+                                        </DataTable.Row>
+                                    </TouchableOpacity>
+                                ))
+                            )
+                            }
+                        </DataTable>
+                    </View>
+
                     {selectedRecipe && (
                         <View style={styles.recipeContainer}>
                             <View style={styles.recipeNameNavbar}>
@@ -154,7 +158,8 @@ const MenuItems = () => {
                                 </Icon.Button>
                                 <Icon.Button
                                     name="times"
-                                    onPress={closeModal}
+                                    // onPress={closeModal}
+                                    onPress={closeRecipeDetails}
                                     backgroundColor="transparent"
                                     iconStyle={{ fontSize: 20, padding: 0, margin: 0 }}
                                     color={"white"}>
@@ -181,6 +186,7 @@ const MenuItems = () => {
                                     <Icon.Button
                                         style={styles.blueBtn}
                                         name="edit"
+                                        onPress={() => { navigation.navigate('MenuBuilder', { editRecipeData: selectedRecipe }), closeModal(); }}
                                         backgroundColor="transparent"
                                         iconStyle={{ fontSize: 19 }}
                                         color={"white"}
@@ -231,7 +237,103 @@ const MenuItems = () => {
                         </View>
                     )}
                 </View>
-            </Modal>
+            </View>
+
+
+            {/* Hover Screen */}
+            {/* <Modal isVisible={selectedRecipe !== null} onBackdropPress={closeModal}> */}
+            {/* <View style={styles.modalContainer}>
+                    {selectedRecipe && (
+                        <View style={styles.recipeContainer}>
+                            <View style={styles.recipeNameNavbar}>
+                                <Icon.Button
+                                    name="list-alt"
+                                    backgroundColor="transparent"
+                                    iconStyle={{ fontSize: 20, marginRight: 5, padding: 0 }}
+                                    color={"white"}>
+                                    <Text style={[styles.uppercaseText, { fontWeight: '500', color: 'white', fontSize: '18px' }]}>{selectedRecipe.name}</Text>
+                                </Icon.Button>
+                                <Icon.Button
+                                    name="times"
+                                    onPress={closeModal}
+                                    backgroundColor="transparent"
+                                    iconStyle={{ fontSize: 20, padding: 0, margin: 0 }}
+                                    color={"white"}>
+                                </Icon.Button>
+                            </View>
+                            <ScrollView>
+                                <View style={styles.recipeDetails}>
+                                    <View style={styles.detailsContainer}>
+                                        <Text style={{ fontsize: '10px', marginBottom: '10px' }}><span style={styles.boldText}>Type:</span> {selectedRecipe.category}</Text>
+                                        <Text style={{ fontsize: '10px', marginBottom: '10px' }}><span style={styles.boldText}>Inventory:</span> {selectedRecipe.inventory ? 'Yes' : 'No'}</Text>
+                                        <Text style={{ fontsize: '10px', marginBottom: '10px' }}><span style={styles.boldText}>Yields:</span> {selectedRecipe.yields[0].quantity} {selectedRecipe.yields[0].unit}</Text>
+                                        <Text style={{ fontsize: '10px', marginBottom: '10px' }}><span style={styles.boldText}>Shelf Life:</span> 1 Day</Text>
+                                        <Text style={{ fontsize: '10px', marginBottom: '10px' }}><span style={styles.boldText}>Method of Preparation:</span></Text>
+                                        <Text style={{ fontsize: '10px', marginBottom: '10px' }}>{selectedRecipe.methodPrep}</Text>
+                                    </View>
+                                    <View style={styles.imageContainer}>
+                                        <Image source={{ uri: `data:${selectedRecipe.photo.img.contentType};base64,${ImageBase64.encode(selectedRecipe.photo.img.data.data)}` }} style={styles.recipeImage} />
+                                        <Image source={{ uri: `https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fGZvb2R8ZW58MHx8MHx8fDA%3D` }} style={styles.recipeImage} />
+                                    </View>
+                                </View>
+                            </ScrollView>
+                            <View style={styles.recipeButtons}>
+                                <View style={styles.leftButtonsContainer}>
+                                    <Icon.Button
+                                        style={styles.blueBtn}
+                                        name="edit"
+                                        onPress={() => { navigation.navigate('MenuBuilder', { editRecipeData: selectedRecipe }), closeModal(); }}
+                                        backgroundColor="transparent"
+                                        iconStyle={{ fontSize: 19 }}
+                                        color={"white"}
+                                    >
+                                        <Text style={{ color: 'white', fontSize: 14 }}>Edit Recipe</Text>
+                                    </Icon.Button>
+                                    <Icon.Button
+                                        style={styles.blueBtn}
+                                        name="trash"
+                                        onPress={() => { deleteRecipe(selectedRecipe._id) }}
+                                        backgroundColor="transparent"
+                                        iconStyle={{ fontSize: 19 }}
+                                        color={"white"}
+                                    >
+                                        <Text style={{ color: 'white', fontSize: 14 }}>Delete Recipe</Text>
+                                    </Icon.Button>
+                                    <Icon.Button
+                                        style={styles.blueBtn}
+                                        name="print"
+                                        backgroundColor="transparent"
+                                        iconStyle={{ fontSize: 19 }}
+                                        color={"white"}
+                                    >
+                                        <Text style={{ color: 'white', fontSize: 14 }}>Print</Text>
+                                    </Icon.Button>
+                                </View>
+                                <View style={styles.rightButtonsContainer}>
+                                    <Icon.Button
+                                        style={styles.blueTransparentBtn}
+                                        name="line-chart"
+                                        backgroundColor="transparent"
+                                        iconStyle={{ fontSize: 19 }}
+                                        color={"#0071cd"}
+                                    >
+                                        <Text style={{ color: '#0071cd', fontSize: 14 }}>Recipe Cost History</Text>
+                                    </Icon.Button>
+                                    <Icon.Button
+                                        style={styles.blueTransparentBtn}
+                                        name="history"
+                                        backgroundColor="transparent"
+                                        iconStyle={{ fontSize: 19 }}
+                                        color={"#0071cd"}
+                                    >
+                                        <Text style={{ color: '#0071cd', fontSize: 14 }}>History</Text>
+                                    </Icon.Button>
+                                </View>
+                            </View>
+                        </View>
+                    )}
+                </View> */}
+            {/* </Modal> */}
         </View>
     );
 };
@@ -239,8 +341,8 @@ const MenuItems = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
+        // alignItems: 'center',
+        // justifyContent: 'center',
         backgroundColor: 'white',
         marginTop: 60,
     },
@@ -285,6 +387,15 @@ const styles = StyleSheet.create({
     searchIcon: {
         marginLeft: 10,
     },
+    splitScreenContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        // marginTop: 10,
+    },
+    tableContainer: {
+        flex: 1,
+        backgroundColor: 'white',
+    },
     dataTable: {
         marginTop: 5,
     },
@@ -320,8 +431,9 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
     },
     recipeContainer: {
-        width: '100%',
-        height: '100%',
+        // width: '100%',
+        // height: '100%',
+        flex: 1,
         backgroundColor: '#fff',
         border: '3.5px solid #4697ce',
         borderRadius: 5,

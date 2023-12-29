@@ -2,7 +2,7 @@ import React, { useContext, useState, useEffect } from 'react';
 import { ScrollView, View, Text, TextInput, Button, StyleSheet, FlatList, TouchableOpacity, Picker } from 'react-native';
 import Spinner from 'react-native-loading-spinner-overlay';
 import { AuthContext } from '../../context/AuthContext.js'
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import Navbar from '../../components/Navbar'
 import { useDropzone } from 'react-dropzone';
@@ -11,6 +11,7 @@ import LoadingScreen from '../../components/LoadingScreen';
 
 const MenuBuilder = () => {
     const navigation = useNavigation();
+    const route = useRoute();
     const { userInfo, isLoading, logout } = useContext(AuthContext);
     const [loading, setLoading] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
@@ -20,6 +21,7 @@ const MenuBuilder = () => {
     const [selectedIngredient, setSelectedIngredient] = useState({});
     const [currentCost, setCurrentCost] = useState();
     const [unitMaps, setUnitMaps] = useState([]);
+    const [editMode, setEditMode] = useState(route.params ? true : false);
     const [recipeData, setRecipeData] = useState({
         userId: userInfo.user.userId,
         name: '',
@@ -35,6 +37,8 @@ const MenuBuilder = () => {
     const categories = ['Roll', 'Pizza', 'Burger', 'Drink', 'Starter', 'Snacks'];
     const menuTypes = ['Special', 'Breads', 'Breakfast', 'MainCourse', 'Starters', 'Chefs Special', 'Shakes'];
     const yieldUnits = ['Each', 'Serving'];
+
+    const editRecipeData = route.params?.editRecipeData || null;
 
     const getIngredients = async () => {
         try {
@@ -90,6 +94,21 @@ const MenuBuilder = () => {
         getIngredients();
         getUnitMaps();
         costEstimation();
+        if (editMode) {
+            setRecipeData({
+                userId: editRecipeData.userId,
+                name: editRecipeData.name,
+                category: editRecipeData.category,
+                yields: editRecipeData.yields || [{ quantity: '', unit: '' }],
+                photo: editRecipeData.photo || null,
+                methodPrep: editRecipeData.methodPrep || '',
+                ingredients: editRecipeData.ingredients || [],
+                menuPrice: editRecipeData.menuPrice || '',
+                menuType: editRecipeData.menuType || '',
+            });
+            // setEditRecipeData({});
+            setEditMode(false)
+        }
     }, [recipeData]);
 
 
@@ -100,7 +119,7 @@ const MenuBuilder = () => {
     };
 
     const handleIngredientSearch = (text) => {
-        // Filter ingredients based on search term
+        // Filter ingredients based on search term  
         const results = ingredients.filter(ingredient =>
             ingredient.name.toLowerCase().includes(text.toLowerCase())
         );
@@ -175,12 +194,25 @@ const MenuBuilder = () => {
             data.append('ingredients', JSON.stringify(recipeData.ingredients));
             data.append('menuPrice', recipeData.menuPrice);
             data.append('menuType', recipeData.menuType);
-            const result = await client.post('/create-recipe', data, {
-                headers: {
-                    'content-type': 'multipart/form-data'
-                },
-            })
-            console.log(result.data);
+
+            let result;
+
+            if (editRecipeData && editRecipeData._id) {
+                data.append('recipeId', editRecipeData._id);
+                result = await client.post('/update-recipe', data, {
+                    headers: {
+                        'content-type': 'multipart/form-data'
+                    },
+                })
+            } else {
+                result = await client.post('/create-recipe', data, {
+                    headers: {
+                        'content-type': 'multipart/form-data'
+                    },
+                })
+            }
+            
+            console.log(result.data)
             if (result.data.success) {
                 setRecipeData({
                     userId: userInfo.user.userId,
@@ -273,7 +305,7 @@ const MenuBuilder = () => {
                             />
                             <Picker
                                 style={styles.smallInput}
-                                selectedValue={recipeData.yields.unit}
+                                selectedValue={yieldItem.unit}
                                 onValueChange={(itemValue) => handleYieldsChange(index, 'unit', itemValue)}
                             >
                                 <Picker.Item label="Select a unit..." value="" />
@@ -478,7 +510,7 @@ const MenuBuilder = () => {
                     iconStyle={{ fontSize: 19 }}
                     color={"white"}
                 >
-                    <Text style={{ color: 'white', fontSize: 20 }}>Create Recipe</Text>
+                    <Text style={{ color: 'white', fontSize: 20 }}>{editRecipeData ? 'Update Recipe' : 'Create Recipe'}</Text>
                 </Icon.Button>
 
             </ScrollView>
