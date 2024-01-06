@@ -10,6 +10,9 @@ import SignUpScreen from '../../screens/SignUpScreen'
 import MenuBuilder from '../../screens/MenuBuilder'
 import MenuItems from '../../screens/MenuItems'
 import InvoiceTable from '../../screens/InvoiceTable'
+import PurchaseHistory from '../../screens/PurchaseHistory'
+import FoodCostCalculator from '../../screens/FoodCostCalculator'
+import MarginCalculator from '../../screens/MarginCalculator'
 import LoadingScreen from '../../components/LoadingScreen';
 import { AuthContext } from '../../context/AuthContext.js';
 
@@ -29,10 +32,13 @@ const Navigation = () => {
           />
         ) : userInfo.token ? (
           <>
-            {/* <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }}/>  */}
+            <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }}/> 
             <Stack.Screen name="MenuItems" component={MenuItems} options={{ headerShown: false }}/>  
-            {/* <Stack.Screen name="MenuBuilder" component={MenuBuilder} options={{ headerShown: false }}/> */}
-            {/* <Stack.Screen name="InvoiceTable" component={InvoiceTable} options={{ headerShown: false }}/> */}
+            <Stack.Screen name="MenuBuilder" component={MenuBuilder} options={{ headerShown: false }}/>
+            <Stack.Screen name="InvoiceTable" component={InvoiceTable} options={{ headerShown: false }}/>
+            <Stack.Screen name="PurchaseHistory" component={PurchaseHistory} options={{ headerShown: false }}/>
+            <Stack.Screen name="FoodCostCalculator" component={FoodCostCalculator} options={{ headerShown: false }}/>
+            <Stack.Screen name="MarginCalculator" component={MarginCalculator} options={{ headerShown: false }}/>
           </>
         ) : (
           <>

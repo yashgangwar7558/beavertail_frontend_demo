@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Image, ActivityIndicator, TextInput } from 'react-native';
-import { Button, DataTable } from 'react-native-paper';
+import { Button, DataTable, Accordion } from 'react-native-paper';
 import Modal from 'react-native-modal';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import RNPrint from 'react-native-print';
@@ -9,35 +9,92 @@ import { AuthContext } from '../../context/AuthContext.js'
 import Navbar from '../../components/Navbar';
 import client from '../../config.js'
 
-const InvoiceTable = () => {
+const PurchaseHistory = () => {
     const navigation = useNavigation();
     const { userInfo, isLoading, logout } = useContext(AuthContext);
-    const [invoices, setInvoices] = useState([]);
+    const [purchaseHistory, setPurchaseHistory] = useState([]);
+    const [ingredients, setIngredient] = useState([]);
+    const [expandedIngredients, setExpandedIngredients] = useState([]);
     const [loading, setLoading] = useState(false);
 
-    const getInvoices = async () => {
+    const getPurchaseHistory = async () => {
         try {
             setLoading(true)
             const user = { userId: userInfo.user.userId };
-            const result = await client.post('/get-invoices', user, {
+            const result = await client.post('/get-ingredient-purchase-history', user, {
                 headers: { 'Content-Type': 'application/json' },
             })
-            console.log(result.data.invoices);
-            setInvoices(result.data.invoices)
+            console.log(result.data.history);
+            setPurchaseHistory(result.data.history)
             setLoading(false)
         } catch (error) {
-            console.log(`getting invoices error ${error}`);
+            console.log(`getting Purchase History error ${error}`);
+        }
+    }
+    const getIngredients = async () => {
+        try {
+            const user = { userId: userInfo.user.userId };
+            const result = await client.post('/get-ingredients', user, {
+                headers: { 'Content-Type': 'application/json' },
+            })
+            setIngredient(result.data.ingredients)
+        } catch (error) {
+            console.log(`getting recipes error ${error}`);
         }
     }
 
     useEffect(() => {
-        getInvoices();
+        getPurchaseHistory();
+        getIngredients();
     }, []);
+
+    const handleIngredientToggle = (ingredientName) => {
+        setExpandedIngredients((prevExpanded) =>
+            prevExpanded.includes(ingredientName)
+                ? prevExpanded.filter((name) => name !== ingredientName)
+                : [...prevExpanded, ingredientName]
+        );
+    };
+
+    const renderAccordionContent = (ingredientName) => {
+        const ingredientInvoices = purchaseHistory.find((item) => item.ingredient.name === ingredientName)
+
+        return (
+            <>
+                {
+                    ingredientInvoices ? (
+                        ingredientInvoices.invoices.map((invoice, index) => (
+                            <DataTable.Row
+                                key={index}
+                                style={{ backgroundColor: 'white' }}
+                            >
+                                <DataTable.Cell style={[styles.cell, { flex: 0.2 }]}></DataTable.Cell>
+                                <DataTable.Cell style={styles.cell}></DataTable.Cell>
+                                <DataTable.Cell style={styles.cell}>{invoice.invoiceNumber}</DataTable.Cell>
+                                <DataTable.Cell style={styles.cell}>{invoice.vendor}</DataTable.Cell>
+                                <DataTable.Cell style={styles.cell}>{invoice.uploadDate}</DataTable.Cell>
+                                <DataTable.Cell style={styles.cell}>{invoice.quantity}</DataTable.Cell>
+                                <DataTable.Cell style={styles.cell}>{invoice.unit}</DataTable.Cell>
+                                <DataTable.Cell style={styles.cell}>${invoice.unitPrice}</DataTable.Cell>
+                                <DataTable.Cell style={styles.cell}>${invoice.total}</DataTable.Cell>
+                            </DataTable.Row>
+                        ))
+                    ) : (
+                        <DataTable.Row
+                            style={{ backgroundColor: 'white' }}
+                        >
+                            <DataTable.Cell style={styles.cell}>No purchase history</DataTable.Cell>
+                        </DataTable.Row>
+                    )
+                }
+            </>
+        )
+    };
 
     return (
         <View>
             <View>
-                <Navbar heading="Invoices" />
+                <Navbar heading="Ingredients Purchase History" />
             </View>
             <View style={styles.container}>
                 <View style={styles.tableNav}>
@@ -112,41 +169,43 @@ const InvoiceTable = () => {
 
             <DataTable style={styles.dataTable}>
                 <DataTable.Header style={styles.header}>
-                    <DataTable.Title style={styles.headerCell}><span style={{fontWeight: 'bold', fontSize: '14px', color: 'black'}}>Upload Date</span></DataTable.Title>
-                    <DataTable.Title style={styles.headerCell}><span style={{fontWeight: 'bold', fontSize: '14px', color: 'black'}}>Vendor</span></DataTable.Title>
-                    <DataTable.Title style={styles.headerCell}><span style={{fontWeight: 'bold', fontSize: '14px', color: 'black'}}>Invoice Number</span></DataTable.Title>
-                    <DataTable.Title style={styles.headerCell}><span style={{fontWeight: 'bold', fontSize: '14px', color: 'black'}}>Invoice Number</span></DataTable.Title>
-                    <DataTable.Title style={styles.headerCell}><span style={{fontWeight: 'bold', fontSize: '14px', color: 'black'}}>Payment</span></DataTable.Title>
-                    <DataTable.Title style={styles.headerCell}><span style={{fontWeight: 'bold', fontSize: '14px', color: 'black'}}>Status</span></DataTable.Title>
-                    <DataTable.Title style={styles.headerCell}><span style={{fontWeight: 'bold', fontSize: '14px', color: 'black'}}>Total</span></DataTable.Title>
+                    <DataTable.Cell style={[styles.cell, { flex: 0.2 }]}></DataTable.Cell>
+                    <DataTable.Title style={styles.headerCell}><span style={{ fontWeight: 'bold', fontSize: '14px', color: 'black' }}>Ingredient Name</span></DataTable.Title>
+                    <DataTable.Title style={styles.headerCell}><span style={{ fontWeight: 'bold', fontSize: '14px', color: 'black' }}>Invoice Number</span></DataTable.Title>
+                    <DataTable.Title style={styles.headerCell}><span style={{ fontWeight: 'bold', fontSize: '14px', color: 'black' }}>Vendor</span></DataTable.Title>
+                    <DataTable.Title style={styles.headerCell}><span style={{ fontWeight: 'bold', fontSize: '14px', color: 'black' }}>Purchase Date</span></DataTable.Title>
+                    <DataTable.Title style={styles.headerCell}><span style={{ fontWeight: 'bold', fontSize: '14px', color: 'black' }}>Quantity</span></DataTable.Title>
+                    <DataTable.Title style={styles.headerCell}><span style={{ fontWeight: 'bold', fontSize: '14px', color: 'black' }}>Unit</span></DataTable.Title>
+                    <DataTable.Title style={styles.headerCell}><span style={{ fontWeight: 'bold', fontSize: '14px', color: 'black' }}>Unit Price</span></DataTable.Title>
+                    <DataTable.Title style={styles.headerCell}><span style={{ fontWeight: 'bold', fontSize: '14px', color: 'black' }}>Total</span></DataTable.Title>
                 </DataTable.Header>
 
                 {loading ? (
                     <ActivityIndicator size="large" color="#0000ff" style={{ marginTop: 10 }} />
                 ) : (
-                    invoices.map((item, index) => (
-                        <DataTable.Row
-                            key={index}
-                            style={index % 2 === 0 ? styles.evenRow : styles.oddRow}
-                        >
-                            <DataTable.Cell style={styles.cell}>{item.uploadDate}</DataTable.Cell>
-                            <DataTable.Cell style={styles.cell}>{item.vendor}</DataTable.Cell>
-                            <DataTable.Cell style={styles.cell}>{item.invoiceNumber}</DataTable.Cell>
-                            <DataTable.Cell style={styles.cell}>{item.invoiceDate}</DataTable.Cell>
-                            <DataTable.Cell style={styles.cell}>{item.payment}</DataTable.Cell>
-                            <DataTable.Cell style={styles.cell}>{item.status}</DataTable.Cell>
-                            <DataTable.Cell style={styles.cell}>
-                                ${item.total}
-                                <Icon.Button style={{border: '2px solid #1f82d2', borderRadius: 30, paddingHorizontal: 7, paddingVertical: 4, marginLeft: 50}}
-                                    name="paypal"
-                                    backgroundColor="transparent"
-                                    underlayColor="transparent"
-                                    color={"#1f82d2"}
-                                    iconStyle={{padding: 0, marginRight: 5, fontSize: 15}}>
-                                    <Text style={{ color: '#1f82d2', fontSize: 15, fontWeight: '700'}}>Pay</Text>
-                                </Icon.Button>
-                            </DataTable.Cell>
-                        </DataTable.Row>
+                    ingredients.map((item, index) => (
+                        <React.Fragment key={index}>
+                            <DataTable.Row
+                                style={index % 2 === 0 ? styles.evenRow : styles.oddRow}
+                                onPress={() => handleIngredientToggle(item.name)}
+                            >
+                                <DataTable.Cell style={[styles.cell, { flex: 0.2 }]}>
+                                    <Icon.Button style={{}}
+                                        name={expandedIngredients.includes(item.name) ? 'minus-square' : 'plus-square'}
+                                        onPress={() => handleIngredientToggle(item.name)}
+                                        backgroundColor="transparent"
+                                        underlayColor="transparent"
+                                        color={"#1f82d2"}
+                                        iconStyle={{ padding: 0, marginRight: 0, fontSize: 15 }}>
+                                    </Icon.Button>
+                                </DataTable.Cell>
+                                <DataTable.Cell style={[styles.cell, { flex: 8 }]}>
+                                    <span style={{ fontWeight: '700' }}>{item.name}</span>
+                                </DataTable.Cell>
+                            </DataTable.Row>
+
+                            {expandedIngredients.includes(item.name) && renderAccordionContent(item.name)}
+                        </React.Fragment>
                     ))
                 )
                 }
@@ -220,9 +279,6 @@ const styles = StyleSheet.create({
         borderBottomColor: 'black',
         backgroundColor: 'white'
     },
-    cell: {
-        // paddingLeft: 10,
-    },
     evenRow: {
         backgroundColor: '#f2f0f0',
     },
@@ -231,4 +287,4 @@ const styles = StyleSheet.create({
     },
 })
 
-export default InvoiceTable;
+export default PurchaseHistory;

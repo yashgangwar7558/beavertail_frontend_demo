@@ -78,6 +78,7 @@ const MenuItems = () => {
                                 name="plus"
                                 onPress={() => navigation.navigate('MenuBuilder')}
                                 backgroundColor="transparent"
+                                underlayColor="transparent"
                                 iconStyle={{ fontSize: 22, paddingHorizontal: 5 }}
                                 color={"white"}
                             >
@@ -90,6 +91,7 @@ const MenuItems = () => {
                                 name="angle-down"
                                 onPress={() => navigation.navigate('MenuBuilder')}
                                 backgroundColor="transparent"
+                                underlayColor="transparent"
                                 iconStyle={{ fontSize: 22, paddingHorizontal: 5 }}
                                 color={"white"}
                             >
@@ -114,13 +116,13 @@ const MenuItems = () => {
                         {/* Table */}
                         <DataTable style={styles.dataTable}>
                             <DataTable.Header style={styles.header}>
-                                <DataTable.Title style={styles.headerCell}>Name</DataTable.Title>
-                                <DataTable.Title style={styles.headerCell}>Type</DataTable.Title>
-                                <DataTable.Title style={styles.headerCell}>On Inventory</DataTable.Title>
-                                <DataTable.Title style={styles.headerCell}>Cost</DataTable.Title>
-                                <DataTable.Title style={styles.headerCell}>Menu Price</DataTable.Title>
-                                <DataTable.Title style={styles.headerCell}>Net Profit</DataTable.Title>
-                                <DataTable.Title style={styles.headerCell}>Cost %</DataTable.Title>
+                                <DataTable.Title style={styles.headerCell}><span style={{fontWeight: 'bold', fontSize: '14px', color: 'black'}}>Name</span></DataTable.Title>
+                                <DataTable.Title style={styles.headerCell}><span style={{fontWeight: 'bold', fontSize: '14px', color: 'black'}}>Type</span></DataTable.Title>
+                                <DataTable.Title style={styles.headerCell}><span style={{fontWeight: 'bold', fontSize: '14px', color: 'black'}}>On Inventory</span></DataTable.Title>
+                                <DataTable.Title style={styles.headerCell}><span style={{fontWeight: 'bold', fontSize: '14px', color: 'black'}}>Cost</span></DataTable.Title>
+                                <DataTable.Title style={styles.headerCell}><span style={{fontWeight: 'bold', fontSize: '14px', color: 'black'}}>Menu Price</span></DataTable.Title>
+                                <DataTable.Title style={styles.headerCell}><span style={{fontWeight: 'bold', fontSize: '14px', color: 'black'}}>Net Profit</span></DataTable.Title>
+                                <DataTable.Title style={styles.headerCell}><span style={{fontWeight: 'bold', fontSize: '14px', color: 'black'}}>Cost %</span></DataTable.Title>
                             </DataTable.Header>
 
                             {loading ? (
@@ -152,6 +154,7 @@ const MenuItems = () => {
                                 <Icon.Button
                                     name="list-alt"
                                     backgroundColor="transparent"
+                                    underlayColor="transparent"
                                     iconStyle={{ fontSize: 20, marginRight: 5, padding: 0 }}
                                     color={"white"}>
                                     <Text style={[styles.uppercaseText, { fontWeight: '500', color: 'white', fontSize: '18px' }]}>{selectedRecipe.name}</Text>
@@ -161,6 +164,7 @@ const MenuItems = () => {
                                     // onPress={closeModal}
                                     onPress={closeRecipeDetails}
                                     backgroundColor="transparent"
+                                    underlayColor="transparent"
                                     iconStyle={{ fontSize: 20, padding: 0, margin: 0 }}
                                     color={"white"}>
                                 </Icon.Button>
@@ -188,6 +192,7 @@ const MenuItems = () => {
                                         name="edit"
                                         onPress={() => { navigation.navigate('MenuBuilder', { editRecipeData: selectedRecipe }), closeModal(); }}
                                         backgroundColor="transparent"
+                                        underlayColor="transparent"
                                         iconStyle={{ fontSize: 19 }}
                                         color={"white"}
                                     >
@@ -198,6 +203,7 @@ const MenuItems = () => {
                                         name="trash"
                                         onPress={() => { deleteRecipe(selectedRecipe._id) }}
                                         backgroundColor="transparent"
+                                        underlayColor="transparent"
                                         iconStyle={{ fontSize: 19 }}
                                         color={"white"}
                                     >
@@ -207,6 +213,7 @@ const MenuItems = () => {
                                         style={styles.blueBtn}
                                         name="print"
                                         backgroundColor="transparent"
+                                        underlayColor="transparent"
                                         iconStyle={{ fontSize: 19 }}
                                         color={"white"}
                                     >
@@ -218,6 +225,7 @@ const MenuItems = () => {
                                         style={styles.blueTransparentBtn}
                                         name="line-chart"
                                         backgroundColor="transparent"
+                                        underlayColor="transparent"
                                         iconStyle={{ fontSize: 19 }}
                                         color={"#0071cd"}
                                     >
@@ -227,6 +235,7 @@ const MenuItems = () => {
                                         style={styles.blueTransparentBtn}
                                         name="history"
                                         backgroundColor="transparent"
+                                        underlayColor="transparent"
                                         iconStyle={{ fontSize: 19 }}
                                         color={"#0071cd"}
                                     >
@@ -397,13 +406,12 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
     },
     dataTable: {
-        marginTop: 5,
+        // marginTop: 5,
     },
     header: {
         borderBottomWidth: 1,
         borderBottomColor: 'black',
-        fontWeight: 'bold',
-        fontSize: 12,
+        backgroundColor: 'white',
     },
     headerCell: {
         paddingLeft: 10,

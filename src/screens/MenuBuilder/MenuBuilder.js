@@ -30,11 +30,12 @@ const MenuBuilder = () => {
         photo: null,
         methodPrep: '',
         ingredients: [], // { ingredient_id: '', name: '', category: '', quantity: '', unit: '', notes: '' }
+        modifierCost: '',
         menuPrice: '',
         menuType: '',
     });
 
-    const categories = ['Roll', 'Pizza', 'Burger', 'Drink', 'Starter', 'Snacks'];
+    const categories = ['Rolls', 'Pizza', 'Burger', 'Chinese', 'Main Course', 'Snacks', 'Mocktail', 'Shakes'];
     const menuTypes = ['Special', 'Breads', 'Breakfast', 'MainCourse', 'Starters', 'Chefs Special', 'Shakes'];
     const yieldUnits = ['Each', 'Serving'];
 
@@ -103,6 +104,7 @@ const MenuBuilder = () => {
                 photo: editRecipeData.photo || null,
                 methodPrep: editRecipeData.methodPrep || '',
                 ingredients: editRecipeData.ingredients || [],
+                modifierCost: editRecipeData.modifierCost || '',
                 menuPrice: editRecipeData.menuPrice || '',
                 menuType: editRecipeData.menuType || '',
             });
@@ -192,6 +194,7 @@ const MenuBuilder = () => {
             data.append('photo', recipeData.photo);
             data.append('methodPrep', recipeData.methodPrep);
             data.append('ingredients', JSON.stringify(recipeData.ingredients));
+            data.append('modifierCost', recipeData.modifierCost);
             data.append('menuPrice', recipeData.menuPrice);
             data.append('menuType', recipeData.menuType);
 
@@ -222,6 +225,7 @@ const MenuBuilder = () => {
                     photo: null,
                     methodPrep: '',
                     ingredients: [{ ingredient_id: '', name: '', category: '', quantity: '', unit: '', notes: '' }],
+                    modifierCost: '',
                     menuPrice: '',
                     menuType: '',
                 });
@@ -288,6 +292,7 @@ const MenuBuilder = () => {
                         <Icon.Button style={styles.greenBtn}
                             name="plus-circle"
                             backgroundColor="transparent"
+                            underlayColor="transparent"
                             color={"#2bb378"}
                             onPress={() => handleAddItem('yields')}>
                             <Text style={{ color: '#2bb378', fontSize: 15 }}>Add Yields</Text>
@@ -317,6 +322,7 @@ const MenuBuilder = () => {
                                 name="times-circle-o"
                                 onPress={() => handleDeleteYield(index)}
                                 backgroundColor="transparent"
+                                underlayColor="transparent"
                                 iconStyle={{ margin: 0, padding: 0, fontSize: 25 }}
                                 color={"gray"}>
                             </Icon.Button>
@@ -329,6 +335,7 @@ const MenuBuilder = () => {
                         <Icon.Button style={styles.greenBtn}
                             name="camera"
                             backgroundColor="transparent"
+                            underlayColor="transparent"
                             iconStyle={{ fontSize: 18 }}
                             color={"#2bb378"}>
                             <Text style={{ color: '#2bb378', fontSize: 15 }}>Add Media</Text>
@@ -362,30 +369,35 @@ const MenuBuilder = () => {
                         <Icon.Button style={styles.greenBtn}
                             name="plus-circle"
                             backgroundColor="transparent"
+                            underlayColor="transparent"
                             color={"#2bb378"}>
                             <Text style={{ color: '#2bb378', fontSize: 15 }}>Add Food</Text>
                         </Icon.Button><span>   </span>
                         <Icon.Button style={styles.greenBtn}
                             name="plus-circle"
                             backgroundColor="transparent"
+                            underlayColor="transparent"
                             color={"#2bb378"}>
                             <Text style={{ color: '#2bb378', fontSize: 15 }}>Add Non-Alcoholic Beverage</Text>
                         </Icon.Button><span>   </span>
                         <Icon.Button style={styles.greenBtn}
                             name="plus-circle"
                             backgroundColor="transparent"
+                            underlayColor="transparent"
                             color={"#2bb378"}>
                             <Text style={{ color: '#2bb378', fontSize: 15 }}>Add Alcohol</Text>
                         </Icon.Button><span>   </span>
                         <Icon.Button style={styles.greenBtn}
                             name="plus-circle"
                             backgroundColor="transparent"
+                            underlayColor="transparent"
                             color={"#2bb378"}>
                             <Text style={{ color: '#2bb378', fontSize: 15 }}>Add Recipe</Text>
                         </Icon.Button><span>   </span>
                         <Icon.Button style={styles.redBtn}
                             name="times"
                             backgroundColor="transparent"
+                            underlayColor="transparent"
                             color={"#ff3131"}>
                             <Text style={{ color: '#ff3131', fontSize: 15 }}>Delete Ingredients</Text>
                         </Icon.Button>
@@ -470,12 +482,23 @@ const MenuBuilder = () => {
                                 name="times-circle-o"
                                 onPress={() => handleDeleteIngredient(index)}
                                 backgroundColor="transparent"
+                                underlayColor="transparent"
                                 iconStyle={{ margin: 0, padding: 0, fontSize: 25 }}
                                 color={"gray"}>
                             </Icon.Button>
                         </View>
                     ))}
                     <Text style={{ fontSize: '15px', fontWeight: 'bold' }}>Estimated Cost: <span style={{ color: '#2bb378' }}>${currentCost}</span></Text>
+                </View>
+
+                <View style={styles.inputContainer}>
+                    <Text style={styles.label}>Additional Cost</Text>
+                    <TextInput
+                        style={styles.input}
+                        keyboardType='numeric'
+                        value={recipeData.modifierCost ? recipeData.modifierCost.toString() : ''}
+                        onChangeText={(text) => setRecipeData({ ...recipeData, modifierCost: parseFloat(text) })}
+                    />
                 </View>
 
                 <View style={styles.inputContainer}>
@@ -507,6 +530,7 @@ const MenuBuilder = () => {
                     onPress={handleSubmit}
                     name="cutlery"
                     backgroundColor="transparent"
+                    underlayColor="transparent"
                     iconStyle={{ fontSize: 19 }}
                     color={"white"}
                 >

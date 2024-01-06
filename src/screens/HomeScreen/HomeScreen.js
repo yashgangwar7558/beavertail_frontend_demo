@@ -23,6 +23,7 @@ const HomeScreen = () => {
           name="list"
           onPress={() => navigation.navigate('MenuItems')}
           backgroundColor="transparent"
+          underlayColor="transparent"
           iconStyle={{ fontSize: 26 }}
           color={"white"}>
           <Text style={{ color: 'white', fontSize: 19 }}>Recipe Book</Text>
@@ -32,6 +33,7 @@ const HomeScreen = () => {
           name="edit"
           onPress={() => navigation.navigate('MenuBuilder')}
           backgroundColor="transparent"
+          underlayColor="transparent"
           iconStyle={{ fontSize: 26 }}
           color={"white"}>
           <Text style={{ color: 'white', fontSize: 19 }}>Add Recipe</Text>
@@ -41,9 +43,40 @@ const HomeScreen = () => {
           name="file-text-o"
           onPress={() => navigation.navigate('InvoiceTable')}
           backgroundColor="transparent"
+          underlayColor="transparent"
           iconStyle={{ fontSize: 26 }}
           color={"white"}>
           <Text style={{ color: 'white', fontSize: 19 }}>Invoices List</Text>
+        </Icon.Button>
+
+        <Icon.Button style={styles.blueBtn}
+          name="history"
+          onPress={() => navigation.navigate('PurchaseHistory')}
+          backgroundColor="transparent"
+          underlayColor="transparent"
+          iconStyle={{ fontSize: 26 }}
+          color={"white"}>
+          <Text style={{ color: 'white', fontSize: 19 }}>Purchase History</Text>
+        </Icon.Button>
+
+        <Icon.Button style={styles.blueBtn}
+          name="calculator"
+          onPress={() => navigation.navigate('FoodCostCalculator')}
+          backgroundColor="transparent"
+          underlayColor="transparent"
+          iconStyle={{ fontSize: 26 }}
+          color={"white"}>
+          <Text style={{ color: 'white', fontSize: 19 }}>Food Cost Calculator</Text>
+        </Icon.Button>
+        
+        <Icon.Button style={styles.blueBtn}
+          name="calculator"
+          onPress={() => navigation.navigate('MarginCalculator')}
+          backgroundColor="transparent"
+          underlayColor="transparent"
+          iconStyle={{ fontSize: 26 }}
+          color={"white"}>
+          <Text style={{ color: 'white', fontSize: 19 }}>Margin Calculator</Text>
         </Icon.Button>
       </View>
     </View>
@@ -63,11 +96,11 @@ const styles = StyleSheet.create({
   },
   blueBtn: {
     position: "relative",
-    width: 170,
-    height: 45,
+    // width: 170,
+    // height: 45,
     margin: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
     borderRadius: 10,
     // borderWidth: 2,
     // borderColor: "#2bb378",
